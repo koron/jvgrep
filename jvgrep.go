@@ -55,6 +55,7 @@ var (
 	utf8out    bool            // output utf-8 strings
 	perl       bool            // perl regexp syntax
 	basic      bool            // basic regexp syntax
+	migemo     bool            // using Migemo to generate regexp
 	oc         mahonia.Encoder // mahonia encoder
 	color      string          // color operation
 	cwd, _     = os.Getwd()    // current directory
@@ -471,6 +472,7 @@ Regexp selection and interpretation:
   -F               : PATTERN is a set of newline-separated fixed strings
   -G               : PATTERN is a basic regular expression (BRE)
   -P               : PATTERN is a Perl regular expression (ERE)
+  -M               : PATTERN is expanded by Go/Migemo
 
 Miscellaneous:
   -S               : verbose messages
@@ -550,6 +552,8 @@ func main() {
 				perl = true
 			case 'G':
 				basic = true
+			case 'M':
+				migemo = true
 			case 'v':
 				invert = true
 			case 'o':
@@ -661,6 +665,12 @@ func main() {
 			instr = "(?i:" + instr + ")"
 		}
 		pattern, err = regexp.Compile(instr)
+		if err != nil {
+			errorline(err.Error())
+			os.Exit(-1)
+		}
+	} else if migemo {
+		pattern, err = migemoCompile(instr)
 		if err != nil {
 			errorline(err.Error())
 			os.Exit(-1)
